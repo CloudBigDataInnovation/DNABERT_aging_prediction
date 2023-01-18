@@ -31,6 +31,12 @@ contigs.fasta: sequence with 4096bp
 python DNABERT_prediction.py -i contigs.fasta --model DNABERT_model.tar -o output
 ```
 
+output visualization
+```bash
+python DNABERT_prediction.py -i contigs.fasta --model DNABERT_model.tar -o output --visualize
+```
+
+
 ## Output
 
 - predictions.csv:  predictions of the input sequence

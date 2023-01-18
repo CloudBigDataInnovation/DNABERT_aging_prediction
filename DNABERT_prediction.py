@@ -42,6 +42,11 @@ def parse_args(args):
                         dest='output',
                         default = None)
 
+    parser.add_argument('--visualize',
+                           required=False,
+                           help='output the visualization.',
+                           dest='visualize',
+                           action='store_true',)
 
     return parser.parse_args()
 
@@ -188,33 +193,34 @@ def main(args=None):
         shuffle=False,
         num_workers=8)
 
-    logger.info('Running visualization.')
-    with torch.no_grad():
-        model.eval()
-        for h, (input, input1 ) in zip(seq_list, dataloader_viz):
-            input = input.long().to(device)
-            input1 = input1.long().to(device)
-            lig_f = FeatureAblation(model)
-            attributions_score = lig_f.attribute(inputs=input, perturbations_per_eval=10)
-            attributions = attributions_score.cpu().numpy().reshape(4072)
-            plt.figure(figsize=(12, 4))
-            plt.plot(list(range(4072)), attributions, label='attribution score', linewidth=0.5)
-            plt.savefig(os.path.join(output_path, f'{h}_forward.jpg'))
-            plt.close()
-            att_forward = pd.DataFrame({'attribution score': attributions})
-            att_forward.to_csv(os.path.join(output_path, f'{h}_forward.csv'))
+    if args.visualize:
+        logger.info('Running visualization.')
+        with torch.no_grad():
+            model.eval()
+            for h, (input, input1 ) in zip(seq_list, dataloader_viz):
+                input = input.long().to(device)
+                input1 = input1.long().to(device)
+                lig_f = FeatureAblation(model)
+                attributions_score = lig_f.attribute(inputs=input, perturbations_per_eval=10)
+                attributions = attributions_score.cpu().numpy().reshape(4072)
+                plt.figure(figsize=(12, 4))
+                plt.plot(list(range(4072)), attributions, label='attribution score', linewidth=0.5)
+                plt.savefig(os.path.join(output_path, f'{h}_forward.jpg'))
+                plt.close()
+                att_forward = pd.DataFrame({'attribution score': attributions})
+                att_forward.to_csv(os.path.join(output_path, f'{h}_forward.csv'))
 
-            lig_r = FeatureAblation(model)
-            attributions_score = lig_r.attribute(inputs=input1, perturbations_per_eval=10)
-            attributions = attributions_score.cpu().numpy().reshape(4072)
-            plt.figure(figsize=(12, 4))
-            plt.plot(list(range(4072)), attributions, label='attribution score', linewidth=0.5)
-            plt.savefig(os.path.join(output_path, f'{h}_reverse.jpg'))
-            plt.close()
-            att_reverse = pd.DataFrame({'attribution score': attributions})
-            att_reverse.to_csv(os.path.join(output_path, f'{h}_reverse.csv'))
+                lig_r = FeatureAblation(model)
+                attributions_score = lig_r.attribute(inputs=input1, perturbations_per_eval=10)
+                attributions = attributions_score.cpu().numpy().reshape(4072)
+                plt.figure(figsize=(12, 4))
+                plt.plot(list(range(4072)), attributions, label='attribution score', linewidth=0.5)
+                plt.savefig(os.path.join(output_path, f'{h}_reverse.jpg'))
+                plt.close()
+                att_reverse = pd.DataFrame({'attribution score': attributions})
+                att_reverse.to_csv(os.path.join(output_path, f'{h}_reverse.csv'))
 
-    logger.info('Visualization finished.')
+            logger.info('Visualization finished.')
 
 if __name__ == '__main__':
     main(sys.argv)
