@@ -59,8 +59,6 @@ def generate_reversed(seq):
     return reverse_seq
 
 def generate_bert_embeddings(seq, tokenizer):
-    seq = str(seq).upper()
-
     seq_list = []
     for i in range(8):
         seq_list.append(seq[i * 512 : (i + 1) * 512])
@@ -150,6 +148,7 @@ def main(args=None):
     reversed_features = []
     seq_list = []
     for h, seq in fasta_iter(args.genome_fasta):
+        seq = str(seq).upper()
         features.append(generate_bert_embeddings(seq, tokenizer))
         rev_seq = generate_reversed(seq)
         reversed_features.append(generate_bert_embeddings(rev_seq, tokenizer))
