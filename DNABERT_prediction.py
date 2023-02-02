@@ -13,6 +13,7 @@ import matplotlib.pyplot as plt
 import logging
 
 input_length = 4096
+token_length = 4072
 kmer_len = 6
 
 def parse_args(args):
@@ -201,9 +202,18 @@ def main(args=None):
                 input1 = input1.long().to(device)
                 lig_f = FeatureAblation(model)
                 attributions_score = lig_f.attribute(inputs=input, perturbations_per_eval=10)
-                attributions = attributions_score.cpu().numpy().reshape(4072)
+                attributions = attributions_score.cpu().numpy().reshape(token_length).tolist()
+
+                index_to_delete = []
+
+                for index in range(8):
+                    index_to_delete.append(index * (token_length // 8))
+                    index_to_delete.append(index * (token_length // 8) + (token_length // 8 - 1))
+
+                attributions = [attributions[i] for i in range(len(attributions)) if i not in index_to_delete]
+
                 plt.figure(figsize=(12, 4))
-                plt.plot(list(range(4072)), attributions, label='attribution score', linewidth=0.5)
+                plt.plot(list(range(token_length - 16)), attributions, label='attribution score', linewidth=0.5)
                 plt.savefig(os.path.join(output_path, f'{h}_forward.jpg'))
                 plt.close()
                 att_forward = pd.DataFrame({'attribution score': attributions})
@@ -211,9 +221,12 @@ def main(args=None):
 
                 lig_r = FeatureAblation(model)
                 attributions_score = lig_r.attribute(inputs=input1, perturbations_per_eval=10)
-                attributions = attributions_score.cpu().numpy().reshape(4072)
+                attributions = attributions_score.cpu().numpy().reshape(token_length).tolist()
+
+                attributions = [attributions[i] for i in range(len(attributions)) if i not in index_to_delete]
+
                 plt.figure(figsize=(12, 4))
-                plt.plot(list(range(4072)), attributions, label='attribution score', linewidth=0.5)
+                plt.plot(list(range(token_length - 16)), attributions, label='attribution score', linewidth=0.5)
                 plt.savefig(os.path.join(output_path, f'{h}_reverse.jpg'))
                 plt.close()
                 att_reverse = pd.DataFrame({'attribution score': attributions})
